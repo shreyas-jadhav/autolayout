@@ -198,39 +198,39 @@ function correctBounds(layout: Layout, bounds: { cols: number }): Layout {
   return layout;
 }
 
-export function sync(
-  initialLayout: Layout,
-  cols: number,
-  compactType: CompactType,
-  sizeRefLayout?: Layout
-): Layout {
-  const cloneLayout = cloneDeep(initialLayout) ?? [];
+// export function sync(
+//   initialLayout: Layout,
+//   cols: number,
+//   compactType: CompactType,
+//   sizeRefLayout?: Layout
+// ): Layout {
+//   const cloneLayout = cloneDeep(initialLayout) ?? [];
 
-  if (sizeRefLayout) {
-    for (let i = 0; i < cloneLayout.length; i++) {
-      const refItem = sizeRefLayout.find((item) => item.i === cloneLayout[i].i);
-      if (refItem) {
-        console.log({
-          refItem,
-          cloneItem: cloneLayout[i],
-        });
-        cloneLayout[i].w = refItem.w;
-        cloneLayout[i].h = refItem.h;
-      }
-    }
-  }
+//   if (sizeRefLayout) {
+//     for (let i = 0; i < cloneLayout.length; i++) {
+//       const refItem = sizeRefLayout.find((item) => item.i === cloneLayout[i].i);
+//       if (refItem) {
+//         console.log({
+//           refItem,
+//           cloneItem: cloneLayout[i],
+//         });
+//         cloneLayout[i].w = refItem.w;
+//         cloneLayout[i].h = refItem.h;
+//       }
+//     }
+//   }
 
-  const correctedLayout = correctBounds(cloneLayout ?? [], {
-    cols: cols,
-  });
+//   const correctedLayout = correctBounds(cloneLayout ?? [], {
+//     cols: cols,
+//   });
 
-  console.log({
-    correctedLayout,
-    cols,
-    compactType,
-  });
-  return compact(correctedLayout, compactType, cols);
-}
+//   console.log({
+//     correctedLayout,
+//     cols,
+//     compactType,
+//   });
+//   return compact(correctedLayout, compactType, cols);
+// }
 function calculateFreeSpaceInRow(layout: Layout, rowNum: number, cols: number) {
   // Calculate the occupied space in the specified row
   let occupiedSpace = 0;
