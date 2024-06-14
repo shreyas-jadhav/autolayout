@@ -4,7 +4,7 @@ import ReactGridLayout, { ReactGridLayoutProps } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "./App.css";
 import { Desktop, Mobile, Tablet } from "./Layouts";
-import { sync } from "./utils";
+import { arrangeTiles } from "./utils";
 
 type Layout = ReactGridLayoutProps["layout"];
 const initialLayout = [
@@ -20,8 +20,8 @@ function App() {
     Mobile: Layout;
   }>({
     Desktop: initialLayout,
-    Tablet: sync(sync(initialLayout, 3, "vertical"), 3, "horizontal"),
-    Mobile: sync(sync(initialLayout, 2, "vertical"), 2, "horizontal"),
+    Tablet: arrangeTiles(initialLayout, 3),
+    Mobile: arrangeTiles(initialLayout, 2),
   });
 
   const views = [
@@ -73,24 +73,15 @@ function App() {
               margin={[10, 10]}
               preventCollision
               isDraggable
+              compactType={"vertical"}
               onResize={(layout) =>
-                setLayouts((prev) => {
-                  const newLayouts = cloneDeep(prev);
-                  newLayouts[view.name] = layout;
-                  return newLayouts;
-                })
-              }
-              onDragStop={(layout) => {
-                console.log(`setting layout for ${view.name}`);
                 setLayouts((prev) => {
                   const newLayouts = cloneDeep(prev);
                   (
                     Object.keys(newLayouts) as (keyof typeof newLayouts)[]
                   ).forEach((key) => {
                     if (key === view.name) {
-                      newLayouts[key] = sync(layout, view.cols, "vertical");
-
-                      console.log("new layout", newLayouts[key]);
+                      newLayouts[key] = layout;
                     } else {
                       // only auto adjust if this layout has less cols than the current view
                       if (
@@ -99,19 +90,36 @@ function App() {
                         return;
                       }
 
-                      const vCompacted = sync(
+                      newLayouts[key] = arrangeTiles(
                         layout,
-                        views.find((v) => v.name === key)!.cols,
-                        "vertical",
-                        newLayouts[key]
+                        views.find((v) => v.name === key)!.cols
                       );
+                      console.log("calculated for ", key);
+                    }
+                  });
+                  return newLayouts;
+                })
+              }
+              onDragStop={(layout) => {
+                setLayouts((prev) => {
+                  const newLayouts = cloneDeep(prev);
+                  (
+                    Object.keys(newLayouts) as (keyof typeof newLayouts)[]
+                  ).forEach((key) => {
+                    if (key === view.name) {
+                      newLayouts[key] = layout;
+                    } else {
+                      // only auto adjust if this layout has less cols than the current view
+                      if (
+                        view.cols <= views.find((v) => v.name === key)!.cols
+                      ) {
+                        return;
+                      }
 
-                      newLayouts[key] = sync(
-                        vCompacted,
-                        views.find((v) => v.name === view.name)!.cols,
-                        "horizontal"
+                      newLayouts[key] = arrangeTiles(
+                        layout,
+                        views.find((v) => v.name === key)!.cols
                       );
-
                       console.log("calculated for ", key);
                     }
                   });

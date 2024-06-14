@@ -231,3 +231,92 @@ export function sync(
   });
   return compact(correctedLayout, compactType, cols);
 }
+function calculateFreeSpaceInRow(layout: Layout, rowNum: number, cols: number) {
+  // Calculate the occupied space in the specified row
+  let occupiedSpace = 0;
+
+  for (let i = 0; i < layout.length; i++) {
+    const tile = layout[i];
+
+    // Check if the tile is in the specified row
+    if (tile.y <= rowNum && tile.y + tile.h > rowNum) {
+      occupiedSpace += tile.w;
+    }
+  }
+
+  // Calculate the free space in the row
+  const freeSpace = cols - occupiedSpace;
+  return freeSpace;
+}
+export function arrangeTiles(l: Layout, cols: number) {
+  const finalLayout: Layout = [];
+
+  const newLayout = cloneDeep(l).map((item) => {
+    // max out widths
+    item.w = Math.min(cols, item.w);
+    return item;
+  });
+
+  while (finalLayout.length < 4) {
+    console.log(
+      "remaining tiles",
+      newLayout.filter((l) => !finalLayout.some((fL) => fL.i === l.i))
+    );
+    // take the min row and min col item;
+    const minRowItem = sortLayoutItemsByRowCol(
+      newLayout.filter((l) => !finalLayout.some((fL) => fL.i === l.i))
+    )[0];
+
+    console.log("Min row item", minRowItem);
+
+    if (finalLayout.length == 0) {
+      minRowItem.x = 0;
+      minRowItem.y = 0;
+      finalLayout.push(minRowItem);
+      continue;
+    }
+
+    // max rows in current layout;
+    let maxRow = Math.max(...finalLayout.map((l) => l.y + l.h));
+
+    if (maxRow === -Infinity) {
+      maxRow = 0;
+    }
+
+    let fittable = false;
+
+    for (let i = 0; i < maxRow; i++) {
+      // for each row, check if its minRowItem is fittable;
+      const freeSpace = calculateFreeSpaceInRow(finalLayout, i, cols);
+      console.log(`Row ${i} has ${freeSpace} free space`);
+      if (minRowItem.w <= freeSpace) {
+        console.log(`Placing ${minRowItem.i} in row ${i}`);
+        minRowItem.y = i;
+
+        // get items lying in the same row;
+        const itemsInRow = finalLayout.filter((l) => l.y <= i && l.y + l.h > i);
+        console.log("Items in row ", i, itemsInRow);
+        for (let j = 0; j < cols; j++) {
+          minRowItem.x = j;
+
+          if (!itemsInRow.some((l) => collides(l, minRowItem))) {
+            break;
+          }
+        }
+
+        fittable = true;
+        break;
+      }
+    }
+
+    // if the item is not fittable in any row, create a new row;
+    if (!fittable) {
+      minRowItem.y = maxRow;
+      minRowItem.x = 0;
+    }
+    finalLayout.push(minRowItem);
+  }
+  console.log("FINAL", finalLayout);
+  console.log(`\n\n`);
+  return finalLayout;
+}
